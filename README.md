@@ -20,24 +20,6 @@ Download  pwdlandi.php somewhere and...
 php pwdlandi.php
 will work everywhere
 
-For other info, check the source code:
-//***************************************************************************
-//**** PASSWORD MANAGER ver 1.1
-//**** Features:
-//**** 3 layers of encryption: AES 256, Camellia 256 and Chacha
-//**** Clear data is never saved on the disk
-//**** No cache
-//**** short source code easy to check for security
-//**** db saved in the current folder as pwd.encrypted
-//**** db backup at every rewrite as pwd.encrypted.backup
-//**** no graphical interface
-//**** Requirements:
-//**** - PHP 7
-//**** - OPENSSL library for PHP
-//****
-//**** Tested on:
-//**** Mac Os/x 13.4 (High Sierra), requirement are installed by default.
-//**** It should work  on Linux and Windows as well.
-//***************************************************************************
+For other info, check on top of the source code.
 
 For any help, please drop a message to samuele@landi.ae
