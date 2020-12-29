@@ -1,7 +1,7 @@
 PREFACE:
 A lot of people is using password manager that allows you to access your password from different devices using one single password.
-It's better than writing on yellow notes stiched to your screen, anyway you have to trust the company giving your the app,
-because they could intercept easily your password and have access to your whole life.
+It's much better than writing on yellow notes stiched to your screen, anyway you have to trust the company making your app,
+because they could intercept easily your password and have access to your whole online life.
 I do not trust anyone about my passwords and since I use a different password for every system, I had to write a strong password manager
 for my personal usage. The security is high and the clear source code guarantees that there are no backdoors.
 
