@@ -23,3 +23,9 @@ will work everywhere
 For other info, edit and check on top of the source code.
 
 For any help, please drop a message to samuele@landi.ae
+
+Change log:
+Version 1.2
+
+- added /import and /export to load from and save to a file named: export.json 
+- changed the algorithm chacha to aes-256-ctr because chacha has been removed from Mac Osx.

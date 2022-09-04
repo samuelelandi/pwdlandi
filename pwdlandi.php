@@ -1,9 +1,9 @@
-#!/usr/bin/php
+#!/usr/local/bin/php
 <?php
 //***************************************************************************
-//**** PASSWORD MANAGER FOR SHELL ver 1.1
+//**** PASSWORD MANAGER FOR SHELL ver 1.2
 //**** Features:
-//**** 3 layers of encryption: AES 256, Camellia 256 and Chacha
+//**** 3 layers of encryption: AES 256 OFB, Camellia 256 and AES 256 CTR
 //**** Clear data is never saved on the disk
 //**** No cache
 //**** short source code easy to check for security
@@ -18,7 +18,9 @@
 //**** Mac Os/x 13.4 (High Sierra), requirement are installed by default.
 //**** It should work  on Linux and Windows as well.
 //***************************************************************************
-
+ini_set('log_errors', 'On');
+ini_set('display_errors', 'Off');
+ini_set('error_reporting', E_ALL );
 // create empty db if not yet present
 if(!file_exists("pwd.encrypted"))
     create_pwdfile();
@@ -36,9 +38,9 @@ while($r==NULL){
 }
 $s=explode("\n",$GLOBALS['r']);
 while(1){
-    echo "######################################################################\n";
-    echo "Password Manager - Commands: /add /delete /exit /pwd /gen /all/ /help\n";
-    echo "######################################################################\n";
+    echo "#####################################################################################\n";
+    echo "Password Manager - Commands: /add /delete /exit /pwd /gen /all/ /import /export /help\n";
+    echo "#####################################################################################\n";
     $ss=readline("Search String/Command: ");
     if(strlen($ss)==0)
         continue;
@@ -70,12 +72,31 @@ while(1){
         $s=explode("\n",$GLOBALS['r']);  
         continue;
     }      
+    if(strstr(strtoupper($ss),"/EXPORT")!=NULL){
+        file_put_contents("export.json",$GLOBALS['r']);
+        echo "Exported data to export.json\n"; 
+        continue;
+    }
+    if(strstr(strtoupper($ss),"/IMPORT")!=NULL){
+        $GLOBALS['r']=file_get_contents("export.json");
+        $s=explode("\n",$GLOBALS['r']);
+        echo "Imported data from export.json (/SAVE to save once verified)\n"; 
+        continue;
+    }   
+    if(strstr(strtoupper($ss),"/SAVE")!=NULL){
+        save_pwdfile($pwd);
+        echo "Data Saved\n"; 
+        continue;
+    }   
+
     //*** SEARCHING
     $c=1;
     $x=count($s);
     $ss=strtoupper($ss);
     for($i=1;$i<$x;$i++){
             $j=json_decode($s[$i]);
+            if($j==NULL)
+                continue;
             if(strstr(strtoupper($j->description),$ss)!=NULL ||
                strstr(strtoupper($j->username),$ss)!=NULL ||
                strstr(strtoupper($j->url),$ss)!=NULL || ($ss=="/ALL" && strlen($j->description)>0))
@@ -166,15 +187,15 @@ function load_pwdfile($pwd){
     $dbh=substr($s,512);
     $db=base64_decode($dbh);
     $dpwd=openssl_pbkdf2($pwd,$iv,64,10000,"sha512");
-    $ivl=openssl_cipher_iv_length($cipher="CAMELLIA-256-CFB");
+    $ivl=openssl_cipher_iv_length($cipher="camellia-256-cfb");
     $ivc=substr($iv,0,$ivl);
-    $r=openssl_decrypt($db,"CAMELLIA-256-CFB",$dpwd,$options=OPENSSL_RAW_DATA,$ivc);
-    $ivl=openssl_cipher_iv_length($cipher="ChaCha");
+    $r=openssl_decrypt($db,"camellia-256-cfb",$dpwd,$options=OPENSSL_RAW_DATA,$ivc);
+    $ivl=openssl_cipher_iv_length($cipher="aes-256-ctr");
     $ivc=substr($iv,0,$ivl);
-    $r=openssl_decrypt($r,"ChaCha",$dpwd,$options=OPENSSL_RAW_DATA,$ivc);
-    $ivl=openssl_cipher_iv_length($cipher="AES-256-OFB");
+    $r=openssl_decrypt($r,"aes-256-ctr",$dpwd,$options=OPENSSL_RAW_DATA,$ivc);
+    $ivl=openssl_cipher_iv_length($cipher="aes-256-ofb");
     $ivc=substr($iv,0,$ivl);
-    $r=openssl_decrypt($r,"AES-256-OFB",$dpwd,$options=OPENSSL_RAW_DATA,$ivc);
+    $r=openssl_decrypt($r,"aes-256-ofb",$dpwd,$options=OPENSSL_RAW_DATA,$ivc);
     if(substr($r,0,1)=="{")
         return($r);
     else
@@ -236,15 +257,15 @@ $iv=substr(base64_encode($iv),0,512);
 echo "Encrypting...\n";
 $s=$iv;
 $dpwd=openssl_pbkdf2($pwd,$iv,64,10000,"sha512");
-$ivl=openssl_cipher_iv_length($cipher="AES-256-OFB");
+$ivl=openssl_cipher_iv_length($cipher="aes-256-ofb");
 $ivc=substr($iv,0,$ivl);
-$rc=openssl_encrypt($GLOBALS['r'],"AES-256-OFB",$dpwd,$options=OPENSSL_RAW_DATA,$ivc);
-$ivl=openssl_cipher_iv_length($cipher="ChaCha");
+$rc=openssl_encrypt($GLOBALS['r'],"aes-256-ofb",$dpwd,$options=OPENSSL_RAW_DATA,$ivc);
+$ivl=openssl_cipher_iv_length($cipher="aes-256-ctr");
 $ivc=substr($iv,0,$ivl);
-$rc=openssl_encrypt($rc,"ChaCha",$dpwd,$options=OPENSSL_RAW_DATA,$ivc);
-$ivl=openssl_cipher_iv_length($cipher="CAMELLIA-256-CFB");
+$rc=openssl_encrypt($rc,"aes-256-ctr",$dpwd,$options=OPENSSL_RAW_DATA,$ivc);
+$ivl=openssl_cipher_iv_length($cipher="camellia-256-cfb");
 $ivc=substr($iv,0,$ivl);
-$rc=openssl_encrypt($rc,"CAMELLIA-256-CFB",$dpwd,$options=OPENSSL_RAW_DATA,$ivc);
+$rc=openssl_encrypt($rc,"camellia-256-cfb",$dpwd,$options=OPENSSL_RAW_DATA,$ivc);
 $rcf=$iv."!".base64_encode($rc);
 echo "Encryption completed\n";
 system("cp pwd.encrypted pwd.encrypted.backup");
@@ -281,6 +302,8 @@ echo "/add - To add a new entry\n";
 echo "/delete # - To delete and entry where # should the entry number\n";
 echo "/pwd - To change the master password\n";
 echo "/gen - Generate a true random strong passwrd\n";
+echo "/export - export the data to file export.json \n";
+echo "/import - import the data from file export.json \n";
 echo "/all - List all the entries\n";
 echo "/exit - To exit from the program\n";
 echo "/help - To access this help\n";
