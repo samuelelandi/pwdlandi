@@ -20,7 +20,8 @@
 //***************************************************************************
 ini_set('log_errors', 'On');
 ini_set('display_errors', 'Off');
-ini_set('error_reporting', E_ALL );
+ini_set('error_reporting', E_ERROR );
+error_reporting(E_ERROR);
 // create empty db if not yet present
 if(!file_exists("pwd.encrypted"))
     create_pwdfile();
